@@ -13,6 +13,8 @@ import CoreData
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    var timeTrigger: Timer!
+    //var timerBack  = Timer()
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
@@ -26,12 +28,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidEnterBackground(_ application: UIApplication) {
-        // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
-        // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+        // App run in background
+        print("Background")
+        self.doBackgroundTask()
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
         // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
+        print("Back to foreground")
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
@@ -42,6 +46,37 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
         // Saves changes in the application's managed object context before the application terminates.
         self.saveContext()
+    }
+
+    var timerBack  = Timer()
+    func doBackgroundTask() {
+        
+        DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async {
+            self.beginBackgroundUpdateTask()
+            self.timerBack = Timer.scheduledTimer(timeInterval: 60, target: self, selector: #selector(AppDelegate.displayAlert), userInfo: nil, repeats: true)
+            RunLoop.current.add(self.timerBack, forMode: RunLoopMode.defaultRunLoopMode)
+            RunLoop.current.run()
+            
+            self.endBackgroundUpdateTask()
+        }
+    }
+    var backgroundUpdateTask: UIBackgroundTaskIdentifier!
+    
+    func beginBackgroundUpdateTask() {
+        self.backgroundUpdateTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
+            self.endBackgroundUpdateTask()
+        })
+    }
+    
+    
+    @objc func displayAlert(){
+        print("AAAAAAA")
+        
+    }
+    
+    func endBackgroundUpdateTask() {
+        UIApplication.shared.endBackgroundTask(self.backgroundUpdateTask)
+        self.backgroundUpdateTask = UIBackgroundTaskInvalid
     }
 
     // MARK: - Core Data stack
